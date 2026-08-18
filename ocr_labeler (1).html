@@ -92,6 +92,197 @@
   #toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:var(--graphite);color:#fff;
     padding:9px 18px;border-radius:20px;font-size:12.5px;opacity:0;pointer-events:none;transition:.25s;}
   #toast.show{opacity:1;}
+
+/* ===== Mobile-first improvements ===== */
+html { -webkit-text-size-adjust: 100%; }
+body {
+  padding: 14px 10px 90px;
+  overflow-x: hidden;
+}
+.wrap { width: 100%; max-width: 1180px; }
+
+header {
+  align-items: flex-start;
+  padding-bottom: 12px;
+  margin-bottom: 14px;
+}
+h1 { font-size: clamp(22px, 7vw, 28px); line-height: 1.1; }
+.sub { font-size: 12px; line-height: 1.45; }
+
+.card {
+  padding: 12px;
+  margin-bottom: 12px;
+  border-radius: 10px;
+}
+.card h2 {
+  font-size: 15px;
+  margin-bottom: 10px;
+}
+
+.dropzone {
+  min-height: 74px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 14px;
+  border-radius: 9px;
+  line-height: 1.4;
+  touch-action: manipulation;
+}
+
+.queue {
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  padding: 2px 1px 5px;
+  margin-top: 10px;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+}
+.qthumb {
+  width: 58px;
+  height: 58px;
+}
+
+.workspace {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.canvaswrap {
+  width: 100%;
+  max-height: none;
+  overflow: auto;
+  -webkit-overflow-scrolling: touch;
+  border-radius: 8px;
+}
+canvas {
+  max-width: none;
+  touch-action: none;
+}
+
+.fname {
+  font-size: 11px;
+  margin-top: 6px;
+}
+.hint {
+  font-size: 11px;
+  line-height: 1.45;
+}
+
+.ptype {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 7px;
+  margin-bottom: 10px;
+}
+.ptype button {
+  min-width: 0;
+  width: 100%;
+  padding: 11px 6px;
+  min-height: 52px;
+  border-radius: 8px;
+  touch-action: manipulation;
+}
+.ptype button small { font-size: 9px; }
+
+.fieldlist {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 7px;
+  margin-bottom: 9px;
+}
+.fieldbtn {
+  min-height: 42px;
+  padding: 9px 8px;
+  border-radius: 8px;
+  touch-action: manipulation;
+}
+.fieldbtn .txt { font-size: 10px; }
+
+input[type=text] {
+  min-height: 44px;
+  padding: 10px;
+  font-size: 14px;
+  border-radius: 8px;
+}
+.presence { gap: 7px; }
+.presence button {
+  min-height: 44px;
+  border-radius: 8px;
+  touch-action: manipulation;
+}
+
+.actions {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 8px;
+  margin-top: 10px;
+}
+.actions button {
+  width: 100%;
+  min-height: 44px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  touch-action: manipulation;
+}
+
+.summary {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 7px;
+  margin-bottom: 10px;
+}
+.stat {
+  min-width: 0;
+  padding: 8px 10px;
+  border-radius: 8px;
+}
+.stat .n { font-size: 20px; }
+.stat .l { font-size: 9px; }
+
+.log-wrap {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+table.log {
+  min-width: 520px;
+  font-size: 11px;
+}
+table.log th { font-size: 9px; }
+table.log td { padding: 7px 5px; }
+
+#toast {
+  bottom: 14px;
+  max-width: calc(100vw - 28px);
+  text-align: center;
+  padding: 10px 16px;
+}
+
+/* Make the main editing area easier to use with a thumb. */
+@media (max-width: 600px) {
+  .card:nth-of-type(2) { padding-bottom: 14px; }
+  .canvaswrap { max-height: 58vh; }
+}
+
+@media (min-width: 601px) and (max-width: 880px) {
+  .workspace { display: grid; grid-template-columns: 1fr; }
+}
+
+@media (min-width: 881px) {
+  .actions { display: flex; }
+  .actions button { width: auto; }
+}
+
+/* Extra-small phones */
+@media (max-width: 380px) {
+  body { padding-left: 7px; padding-right: 7px; }
+  .card { padding: 10px; }
+  .fieldlist { grid-template-columns: 1fr 1fr; }
+  .ptype button { font-size: 11px; }
+  .fieldbtn { padding-left: 6px; padding-right: 6px; }
+}
+
 </style>
 </head>
 <body>
@@ -258,20 +449,29 @@ function canvasPos(e){
   const r = canvas.getBoundingClientRect();
   return { x:(e.clientX-r.left), y:(e.clientY-r.top) };
 }
-canvas.addEventListener('mousedown', e=>{
+function canvasPointerPos(e){
+  const r = canvas.getBoundingClientRect();
+  return { x:(e.clientX-r.left), y:(e.clientY-r.top) };
+}
+canvas.addEventListener('pointerdown', e=>{
   if(activeIdx<0) return;
-  const p = canvasPos(e);
+  e.preventDefault();
+  canvas.setPointerCapture?.(e.pointerId);
+  const p = canvasPointerPos(e);
   drag = { x0:p.x, y0:p.y };
 });
-canvas.addEventListener('mousemove', e=>{
+canvas.addEventListener('pointermove', e=>{
   if(!drag) return;
-  const p = canvasPos(e);
+  e.preventDefault();
+  const p = canvasPointerPos(e);
   const x1f = Math.min(drag.x0,p.x)/canvas.width, x2f = Math.max(drag.x0,p.x)/canvas.width;
   const y1f = Math.min(drag.y0,p.y)/canvas.height, y2f = Math.max(drag.y0,p.y)/canvas.height;
   regions[selectedField] = [x1f,y1f,x2f,y2f];
   drawCanvas();
 });
-window.addEventListener('mouseup', ()=>{ drag=null; });
+canvas.addEventListener('pointerup', ()=>{ drag=null; });
+canvas.addEventListener('pointercancel', ()=>{ drag=null; });
+window.addEventListener('pointerup', ()=>{ drag=null; });
 
 function renderFieldList(){
   const el = document.getElementById('fieldlist');
@@ -353,7 +553,8 @@ function handleFiles(files){
 }
 document.getElementById('fileInput').addEventListener('change', e=>handleFiles(e.target.files));
 const dz = document.getElementById('dropzone');
-dz.addEventListener('click', ()=>document.getElementById('fileInput').click());
+// The label already opens the file input; no extra click handler is needed.
+
 ['dragover','dragenter'].forEach(ev=>dz.addEventListener(ev, e=>e.preventDefault()));
 dz.addEventListener('drop', e=>{ e.preventDefault(); handleFiles(e.dataTransfer.files); });
 
